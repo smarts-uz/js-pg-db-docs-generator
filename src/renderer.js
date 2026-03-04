@@ -263,11 +263,80 @@ function renderView(v) {
 </div>`;
 }
 
-function renderFunction(f) {
-  const formattedComment = f.comment
-    ? `<pre class="fn-comment">${esc(f.comment)}</pre>`
-    : '';
+/**
+ * Parses structured plain-text comments into sections.
+ * Recognises lines like "Purpose:", "Parameters:", "Returns:", "Notes:" as headers.
+ * Returns { plain } for unstructured comments, or { sectionKey: bodyText, … }.
+ */
+function parseComment(raw) {
+  if (!raw) return null;
+  const sectionRe = /^[ \t]*([A-Za-z][A-Za-z0-9 _]*):\s*$/gm;
+  const matches = [...raw.matchAll(sectionRe)];
+  if (!matches.length) return { plain: raw.trim() };
 
+  const sections = {};
+  const leading = raw.slice(0, matches[0].index).trim();
+  if (leading) sections._leading = leading;
+
+  for (let i = 0; i < matches.length; i++) {
+    const key   = matches[i][1].trim().toLowerCase();
+    const start = matches[i].index + matches[i][0].length;
+    const end   = matches[i + 1]?.index ?? raw.length;
+    sections[key] = raw.slice(start, end).trim();
+  }
+  return sections;
+}
+
+/**
+ * Converts a section body into HTML.
+ * Lines starting with "- " become <li> items; remaining lines become a <p>.
+ */
+function renderSectionBody(body) {
+  const lines   = body.split('\n').map(l => l.trim()).filter(Boolean);
+  const bullets = lines.filter(l => l.startsWith('- '));
+  const prose   = lines.filter(l => !l.startsWith('- '));
+  return [
+    prose.length   ? `<p>${prose.map(esc).join(' ')}</p>` : '',
+    bullets.length ? `<ul>${bullets.map(b => `<li>${esc(b.slice(2))}</li>`).join('')}</ul>` : '',
+  ].filter(Boolean).join('');
+}
+
+const COMMENT_META = {
+  purpose:     { icon: '📋', label: 'Purpose'    },
+  description: { icon: '📋', label: 'Description'},
+  parameters:  { icon: '⚙️', label: 'Parameters' },
+  returns:     { icon: '↩️', label: 'Returns'    },
+  notes:       { icon: '📝', label: 'Notes'      },
+  _leading:    { icon: '💬', label: ''           },
+};
+const COMMENT_ORDER = ['_leading','purpose','description','parameters','returns','notes'];
+
+function renderCommentSections(comment) {
+  const parsed = parseComment(comment);
+  if (!parsed) return '';
+
+  if (parsed.plain) {
+    return `<div class="fn-comment"><div class="fn-comment-plain">${esc(parsed.plain)}</div></div>`;
+  }
+
+  const keys = [
+    ...COMMENT_ORDER.filter(k => parsed[k] != null),
+    ...Object.keys(parsed).filter(k => !COMMENT_ORDER.includes(k)),
+  ];
+
+  const sectionsHtml = keys.map(key => {
+    const meta  = COMMENT_META[key] || { icon: '▸', label: key };
+    const body  = renderSectionBody(parsed[key]);
+    const title = meta.label
+      ? `<div class="fn-cs-title"><span class="fn-cs-icon">${meta.icon}</span>${meta.label}</div>`
+      : '';
+    return `<div class="fn-cs">${title}<div class="fn-cs-body">${body}</div></div>`;
+  }).join('');
+
+  return `<div class="fn-comment">${sectionsHtml}</div>`;
+}
+
+function renderFunction(f) {
   return `
 <div class="table-block fn-block" id="fn-${slug(f.schema, f.name)}">
   <div class="table-header">
@@ -283,7 +352,7 @@ function renderFunction(f) {
     <code>${esc(f.name)}(${esc(f.arguments || '')})</code>
     <span class="fn-returns">→ ${esc(f.return_type || 'void')}</span>
   </div>
-  ${formattedComment}
+  ${f.comment ? renderCommentSections(f.comment) : ''}
   ${f.body ? `<div class="code-block"><pre>${esc(f.body.trim())}</pre></div>` : ''}
 </div>`;
 }
@@ -500,6 +569,17 @@ const CSS = `
   .fn-sig { padding: 10px 18px; background: var(--surface2); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
   .fn-sig code { font-family: var(--mono); font-size: 13px; }
   .fn-returns { font-family: var(--mono); font-size: 12px; color: var(--green); }
+
+  /* Function comment */
+  .fn-comment { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 12px; }
+  .fn-comment-plain { font-size: 13px; color: var(--muted); font-style: italic; }
+  .fn-cs { display: flex; flex-direction: column; gap: 4px; }
+  .fn-cs-title { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--accent); }
+  .fn-cs-icon { font-size: 12px; }
+  .fn-cs-body { padding-left: 20px; }
+  .fn-cs-body p { font-size: 13px; color: var(--text); line-height: 1.65; margin: 0; }
+  .fn-cs-body ul { margin: 4px 0 0 4px; padding-left: 16px; }
+  .fn-cs-body ul li { font-size: 13px; color: var(--text); line-height: 1.7; }
 
   /* Code blocks */
   .code-block { padding: 14px 18px; background: var(--bg); border-top: 1px solid var(--border); }
