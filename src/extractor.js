@@ -181,7 +181,7 @@ async function getFunctions(pool, schemas) {
       l.lanname                        AS language,
       p.prosecdef                      AS security_definer,
       obj_description(p.oid, 'pg_proc') AS comment,
-      LEFT(p.prosrc, 500)              AS body_preview
+      p.prosrc                         AS body
     FROM pg_proc p
     JOIN pg_namespace n ON n.oid = p.pronamespace
     JOIN pg_language l  ON l.oid = p.prolang

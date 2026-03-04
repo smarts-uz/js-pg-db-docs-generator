@@ -264,12 +264,15 @@ function renderView(v) {
 }
 
 function renderFunction(f) {
+  const formattedComment = f.comment
+    ? `<pre class="fn-comment">${esc(f.comment)}</pre>`
+    : '';
+
   return `
 <div class="table-block fn-block" id="fn-${slug(f.schema, f.name)}">
   <div class="table-header">
     <div class="table-name-row">
       <h3 class="table-name"><span class="badge-fn">FN</span> ${esc(f.name)}</h3>
-      ${f.comment ? `<span class="table-comment">${esc(f.comment)}</span>` : ''}
     </div>
     <div class="table-meta">
       <span class="meta-chip">${esc(f.language?.toUpperCase() || '')}</span>
@@ -280,7 +283,8 @@ function renderFunction(f) {
     <code>${esc(f.name)}(${esc(f.arguments || '')})</code>
     <span class="fn-returns">→ ${esc(f.return_type || 'void')}</span>
   </div>
-  ${f.body_preview ? `<div class="code-block"><pre>${esc(f.body_preview.trim())}${f.body_preview.length >= 500 ? '\n…' : ''}</pre></div>` : ''}
+  ${formattedComment}
+  ${f.body ? `<div class="code-block"><pre>${esc(f.body.trim())}</pre></div>` : ''}
 </div>`;
 }
 
