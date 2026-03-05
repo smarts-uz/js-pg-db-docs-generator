@@ -1,0 +1,1286 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model RateLimiterFlexible {
+  key    String    @id
+  points Int
+  expire DateTime?
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model account {
+  id                String    @id @default(dbgenerated("gen_random_uuid()"))
+  providerAccountId String
+  access_token      String?
+  expires_at        Int?
+  id_token          String?
+  provider          String
+  refresh_token     String?
+  scope             String?
+  session_state     String?
+  token_type        String?
+  type              String
+  userId            Int
+  created_at        DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime? @default(now()) @db.Timestamptz(6)
+  deleted_at        DateTime? @db.Timestamptz(6)
+  created_by        Int?
+  updated_by        Int?
+  deleted_by        Int?
+  user              user      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model action {
+  id         Int              @id @default(autoincrement())
+  position   player_position?
+  type       point_action?
+  point      Int?             @db.SmallInt
+  created_at DateTime?        @default(now()) @db.Timestamptz(6)
+  updated_at DateTime?        @default(now()) @db.Timestamptz(6)
+  deleted_at DateTime?        @db.Timestamptz(6)
+  created_by Int?
+  updated_by Int?
+  deleted_by Int?
+
+  @@index([created_at], map: "idx_userstamp_created_at")
+  @@index([created_by], map: "idx_userstamp_created_by")
+  @@index([deleted_at], map: "idx_userstamp_deleted_at")
+  @@index([deleted_by], map: "idx_userstamp_deleted_by")
+  @@index([updated_at], map: "idx_userstamp_updated_at")
+  @@index([updated_by], map: "idx_userstamp_updated_by")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model banner {
+  id          Int                  @id(map: "advertisement_pkey") @default(autoincrement())
+  start_date  DateTime?            @db.Date
+  end_date    DateTime?            @db.Date
+  price       Int?
+  link        String?              @db.VarChar(255)
+  content_url String?
+  name        String?              @db.VarChar(50)
+  created_at  DateTime?            @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime?            @default(now()) @db.Timestamptz(6)
+  deleted_at  DateTime?            @db.Timestamptz(6)
+  created_by  Int?
+  deleted_by  Int?
+  updated_by  Int?
+  banner_type banner_type?
+  clicks      BigInt?
+  type        banner_service_type?
+  service_id  String?              @db.VarChar
+  views       BigInt?
+
+  @@index([created_at])
+  @@index([service_id])
+}
+
+model cap_token {
+  key     String @id @db.VarChar(255)
+  expires BigInt
+}
+
+model challenge {
+  token   String @id @db.VarChar(255)
+  data    Json
+  expires BigInt
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model club {
+  id                               Int             @id(map: "_copy_1_copy_1_copy_1_copy_1_copy_1") @default(autoincrement())
+  name                             String?         @db.VarChar(64)
+  competition_name                 String?         @db.VarChar(128)
+  name_ru                          String?         @db.VarChar(64)
+  competition_id                   Int?
+  club_link                        String?         @db.VarChar(255)
+  country_id                       Int?
+  native                           String?         @db.VarChar(128)
+  form_img                         String?         @db.VarChar(255)
+  slug                             String?         @db.VarChar(128)
+  region                           String?         @db.VarChar(64)
+  trainer                          String?         @db.VarChar(64)
+  created_at                       DateTime?       @default(now()) @db.Timestamptz(6)
+  updated_at                       DateTime?       @default(now()) @db.Timestamptz(6)
+  deleted_at                       DateTime?       @db.Timestamptz(6)
+  logo_img                         String?         @db.VarChar(128)
+  created_by                       Int?
+  updated_by                       Int?
+  deleted_by                       Int?
+  user_club_created_byTouser       user?           @relation("club_created_byTouser", fields: [created_by], references: [id], onUpdate: SetNull, map: "card_created_by_fkey")
+  user_club_deleted_byTouser       user?           @relation("club_deleted_byTouser", fields: [deleted_by], references: [id], onUpdate: SetNull, map: "card_deleted_by_fkey")
+  user_club_updated_byTouser       user?           @relation("club_updated_byTouser", fields: [updated_by], references: [id], onUpdate: SetNull, map: "card_updated_by_fkey")
+  competition                      competition?    @relation(fields: [competition_id], references: [id], onUpdate: SetNull)
+  country                          country?        @relation(fields: [country_id], references: [id], onUpdate: SetNull, map: "fk_club_country_id")
+  match_match_away_club_idToclub   match[]         @relation("match_away_club_idToclub")
+  match_match_home_club_idToclub   match[]         @relation("match_home_club_idToclub")
+  match_match_winner_club_idToclub match[]         @relation("match_winner_club_idToclub")
+  player                           player[]
+  player_point                     player_point[]
+  player_result                    player_result[]
+  team_player                      team_player[]
+
+  @@index([deleted_at])
+  @@index([id], map: "club_id_index")
+  @@index([name])
+  @@index([competition_id], map: "idx_club_competition_id")
+  @@index([country_id], map: "idx_club_country_id")
+  @@index([created_by], map: "idx_club_created_by")
+  @@index([deleted_by], map: "idx_club_deleted_by")
+  @@index([updated_by], map: "idx_club_updated_by")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model competition {
+  title                             String          @db.VarChar(64)
+  country_id                        Int?
+  flag                              String?         @db.VarChar(128)
+  id                                Int             @id(map: "_copy_2") @default(autoincrement())
+  name                              String?         @db.VarChar(64)
+  name_ru                           String?         @db.VarChar(64)
+  slug                              String?         @unique(map: "uk_competition_slug") @db.VarChar(64)
+  competition_link                  String?         @db.VarChar(128)
+  can_register                      Boolean?
+  team_count                        Int?
+  average_team_point                Float?          @db.Real
+  sum_of_team_point                 Int?
+  deadline                          DateTime?       @db.Timestamptz(6)
+  created_at                        DateTime?       @default(now()) @db.Timestamptz(6)
+  updated_at                        DateTime?       @default(now()) @db.Timestamptz(6)
+  deleted_at                        DateTime?       @db.Timestamptz(6)
+  created_by                        Int?
+  updated_by                        Int?
+  deleted_by                        Int?
+  order                             Int?            @db.SmallInt
+  is_active                         Boolean?        @default(true)
+  club                              club[]
+  user_competition_created_byTouser user?           @relation("competition_created_byTouser", fields: [created_by], references: [id], onUpdate: SetNull, map: "card_created_by_fkey")
+  user_competition_deleted_byTouser user?           @relation("competition_deleted_byTouser", fields: [deleted_by], references: [id], onUpdate: SetNull, map: "card_deleted_by_fkey")
+  user_competition_updated_byTouser user?           @relation("competition_updated_byTouser", fields: [updated_by], references: [id], onUpdate: SetNull, map: "card_updated_by_fkey")
+  country                           country?        @relation(fields: [country_id], references: [id], onUpdate: SetNull)
+  match                             match[]
+  pay_expense                       pay_expense[]
+  player                            player[]
+  player_point                      player_point[]
+  player_result                     player_result[]
+  prize                             prize[]
+  team                              team[]
+  team_player                       team_player[]
+  tour                              tour[]
+  tour_team                         tour_team[]
+  user_activity                     user_activity[]
+
+  @@index([order])
+  @@index([country_id], map: "idx_competition_country_id")
+  @@index([created_by], map: "idx_competition_created_by")
+  @@index([deleted_by], map: "idx_competition_deleted_by")
+  @@index([updated_by], map: "idx_competition_updated_by")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model country {
+  id                            Int           @id(map: "_copy_1_copy_1_copy_1_copy_1") @default(autoincrement())
+  name                          String?       @db.VarChar(32)
+  flag_url                      String?       @db.VarChar(128)
+  created_at                    DateTime?     @default(now()) @db.Timestamptz(6)
+  updated_at                    DateTime?     @default(now()) @db.Timestamptz(6)
+  deleted_at                    DateTime?     @db.Timestamptz(6)
+  created_by                    Int?
+  updated_by                    Int?
+  deleted_by                    Int?
+  club                          club[]
+  competition                   competition[]
+  user_country_created_byTouser user?         @relation("country_created_byTouser", fields: [created_by], references: [id], onUpdate: SetNull)
+  user_country_deleted_byTouser user?         @relation("country_deleted_byTouser", fields: [deleted_by], references: [id], onUpdate: SetNull)
+  user_country_updated_byTouser user?         @relation("country_updated_byTouser", fields: [updated_by], references: [id], onUpdate: SetNull)
+
+  @@index([created_by], map: "idx_country_created_by")
+  @@index([deleted_by], map: "idx_country_deleted_by")
+  @@index([updated_by], map: "idx_country_updated_by")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model match {
+  id                              Int             @id(map: "_copy_1") @default(autoincrement())
+  home_club_id                    Int?
+  away_club_id                    Int?
+  started_date                    DateTime        @db.Timestamptz(6)
+  season_id                       Int?
+  postphoned_date                 DateTime?       @db.Timestamptz(6)
+  winner_club_id                  Int?
+  finished_date                   DateTime?       @db.Timestamptz(6)
+  tour_id                         Int?
+  name                            String?         @db.VarChar(128)
+  home_club_result                Int?            @db.SmallInt
+  away_club_result                Int?            @db.SmallInt
+  status                          match_status
+  competition_id                  Int?
+  created_at                      DateTime?       @default(now()) @db.Timestamptz(6)
+  updated_at                      DateTime?       @default(now()) @db.Timestamptz(6)
+  deleted_at                      DateTime?       @db.Timestamptz(6)
+  created_by                      Int?
+  updated_by                      Int?
+  deleted_by                      Int?
+  match_min                       Int?            @default(90) @db.SmallInt
+  additional_min                  Int?            @db.SmallInt
+  is_finished                     Boolean?        @default(false)
+  user_match_created_byTouser     user?           @relation("match_created_byTouser", fields: [created_by], references: [id], onUpdate: SetNull, map: "card_created_by_fkey")
+  user_match_deleted_byTouser     user?           @relation("match_deleted_byTouser", fields: [deleted_by], references: [id], onUpdate: SetNull, map: "card_deleted_by_fkey")
+  user_match_updated_byTouser     user?           @relation("match_updated_byTouser", fields: [updated_by], references: [id], onUpdate: SetNull, map: "card_updated_by_fkey")
+  club_match_away_club_idToclub   club?           @relation("match_away_club_idToclub", fields: [away_club_id], references: [id], onUpdate: SetNull, map: "fk_away_club_id")
+  club_match_home_club_idToclub   club?           @relation("match_home_club_idToclub", fields: [home_club_id], references: [id], onUpdate: SetNull, map: "fk_home_club_id")
+  season                          season?         @relation(fields: [season_id], references: [id], onUpdate: SetNull, map: "fk_match_fixture_id")
+  club_match_winner_club_idToclub club?           @relation("match_winner_club_idToclub", fields: [winner_club_id], references: [id], onUpdate: SetNull, map: "fk_winner_club_id")
+  competition                     competition?    @relation(fields: [competition_id], references: [id], onUpdate: SetNull)
+  tour                            tour?           @relation(fields: [tour_id], references: [id], onUpdate: SetNull, map: "tour_team_tour_id_fkey")
+  match_event                     match_event[]
+  player_point                    player_point[]
+  player_result                   player_result[]
+
+  @@index([away_club_id], map: "idx_match_away_club_id")
+  @@index([competition_id], map: "idx_match_competition_id")
+  @@index([created_by], map: "idx_match_created_by")
+  @@index([deleted_by], map: "idx_match_deleted_by")
+  @@index([home_club_id], map: "idx_match_home_club_id")
+  @@index([season_id], map: "idx_match_season_id")
+  @@index([tour_id], map: "idx_match_tour_id")
+  @@index([updated_by], map: "idx_match_updated_by")
+  @@index([winner_club_id], map: "idx_match_winner_club_id")
+  @@index([id], map: "index_id")
+  @@index([deleted_at])
+  @@index([started_date])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model match_event {
+  id                                          Int               @id @default(autoincrement())
+  player_id                                   Int?
+  second_player_id                            Int?
+  match_id                                    Int?
+  event_type                                  match_event_type?
+  minute                                      Int?              @default(0) @db.SmallInt
+  created_at                                  DateTime?         @default(now()) @db.Timestamptz(6)
+  updated_at                                  DateTime?         @default(now()) @db.Timestamptz(6)
+  deleted_at                                  DateTime?         @db.Timestamptz(6)
+  created_by                                  Int?
+  updated_by                                  Int?
+  deleted_by                                  Int?
+  match                                       match?            @relation(fields: [match_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_match_id")
+  player_match_event_player_idToplayer        player?           @relation("match_event_player_idToplayer", fields: [player_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_player_id")
+  player_match_event_second_player_idToplayer player?           @relation("match_event_second_player_idToplayer", fields: [second_player_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_second_player_id")
+
+  @@index([match_id])
+  @@index([player_id])
+  @@index([second_player_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model news {
+  id           Int       @id @default(autoincrement())
+  name         String?   @db.VarChar(255)
+  desc         String?
+  image        String?   @db.VarChar(255)
+  created_at   DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime? @default(now()) @db.Timestamptz(6)
+  deleted_at   DateTime? @db.Timestamptz(6)
+  created_by   Int?
+  updated_by   Int?
+  deleted_by   Int?
+  name_ru      String?   @db.VarChar(255)
+  view_count   Int?      @default(0)
+  published_at DateTime? @db.Timestamptz(6)
+  desc_ru      String?
+
+  @@index([deleted_at])
+  @@index([published_at])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pay_balance {
+  id             Int             @id(map: "pay_expense_copy1_pkey") @default(autoincrement())
+  user_id        Int?
+  price          BigInt?
+  system         pay_system_ext?
+  transaction_id String?         @unique(map: "uk_transaction_id_py_balnce") @db.VarChar(64)
+  currency_code  Int?            @default(0) @db.SmallInt
+  state          Int?            @db.SmallInt
+  updated_time   DateTime?       @db.Timestamptz(6)
+  detail         String?         @db.VarChar(32)
+  created_at     DateTime?       @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime?       @default(now()) @db.Timestamptz(6)
+  deleted_at     DateTime?       @db.Timestamptz(6)
+  created_by     Int?
+  updated_by     Int?
+  deleted_by     Int?
+  reason         Int?            @db.SmallInt
+  canceled_at    DateTime?       @db.Timestamptz(6)
+  perform_time   DateTime?       @db.Timestamptz(6)
+  status         Int?            @db.SmallInt
+  user           user?           @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_id")
+
+  @@index([user_id], map: "idx_pay_balance_user_id")
+  @@index([created_at])
+  @@index([deleted_at])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pay_expense {
+  id               Int               @id @default(autoincrement())
+  pay_package_id   Int?
+  price            BigInt?
+  user_id          Int?
+  team_id          Int?
+  pay_package_type pay_package_type?
+  created_at       DateTime?         @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime?         @default(now()) @db.Timestamptz(6)
+  deleted_at       DateTime?         @db.Timestamptz(6)
+  created_by       Int?
+  updated_by       Int?
+  deleted_by       Int?
+  competition_id   Int?
+  system           pay_system?
+  transaction_id   String?           @unique(map: "uk_transaction_id") @db.VarChar(32)
+  currency_code    Int?              @default(0) @db.SmallInt
+  state            Int?              @db.SmallInt
+  status           Int?              @db.SmallInt
+  season_id        Int?
+  perform_time     DateTime?         @db.Timestamptz(6)
+  canceled_at      DateTime?         @db.Timestamptz(6)
+  reason           Int?              @db.SmallInt
+  tour_id          Int?
+  amount           Int?              @db.SmallInt
+  season           season?           @relation(fields: [season_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_season_id")
+  tour             tour?             @relation(fields: [tour_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_tour_id")
+  competition      competition?      @relation(fields: [competition_id], references: [id], onUpdate: SetNull)
+  pay_package      pay_package?      @relation(fields: [pay_package_id], references: [id], onUpdate: SetNull)
+  team             team?             @relation(fields: [team_id], references: [id], onUpdate: SetNull)
+  user             user?             @relation(fields: [user_id], references: [id], onUpdate: SetNull)
+
+  @@index([competition_id], map: "idx_pay_expense_competition_id")
+  @@index([pay_package_id], map: "idx_pay_expense_pay_package_id")
+  @@index([season_id], map: "idx_pay_expense_season_id")
+  @@index([team_id], map: "idx_pay_expense_team_id")
+  @@index([tour_id], map: "idx_pay_expense_tour_id")
+  @@index([user_id], map: "idx_pay_expense_user_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pay_package {
+  id          Int               @id(map: "pay_income_copy1_pkey") @default(autoincrement())
+  name_uz     String?           @db.VarChar(128)
+  type        pay_package_type?
+  amount      Int?              @db.SmallInt
+  priority    Int?              @db.SmallInt
+  name_ru     String?           @db.VarChar(128)
+  price       Int?
+  created_at  DateTime?         @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime?         @default(now()) @db.Timestamptz(6)
+  deleted_at  DateTime?         @db.Timestamptz(6)
+  created_by  Int?
+  updated_by  Int?
+  deleted_by  Int?
+  pay_expense pay_expense[]
+
+  @@index([deleted_at])
+  @@index([priority])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model player {
+  id                                               Int              @id(map: "_copy_1_copy_1_copy_1_copy_1_copy_2") @default(autoincrement())
+  name                                             String?          @db.VarChar(255)
+  position                                         player_position? @default(None)
+  price                                            Float?           @default(0) @db.Real
+  image                                            String?          @db.VarChar(255)
+  shirt_number                                     Int?             @db.SmallInt
+  club_id                                          Int?
+  point                                            Int?             @default(0)
+  name_ru                                          String?          @db.VarChar(255)
+  player_link                                      String?          @db.VarChar(255)
+  native                                           String?          @db.VarChar(255)
+  slug                                             String?          @db.VarChar(255)
+  competition_id                                   Int?
+  created_at                                       DateTime?        @default(now()) @db.Timestamptz(6)
+  updated_at                                       DateTime?        @default(now()) @db.Timestamptz(6)
+  deleted_at                                       DateTime?        @db.Timestamptz(6)
+  created_by                                       Int?
+  updated_by                                       Int?
+  deleted_by                                       Int?
+  team_count                                       Int?             @default(0)
+  percentage                                       Int?             @default(0)
+  is_actualized                                    Boolean?
+  played_min                                       Int?             @default(0) @db.SmallInt
+  goal                                             Int?             @default(0) @db.SmallInt
+  goal_asist                                       Int?             @default(0) @db.SmallInt
+  missed_penalty                                   Int?             @default(0) @db.SmallInt
+  every_2_missed_goals                             Int?             @default(0) @db.SmallInt
+  yellow_card                                      Int?             @default(0) @db.SmallInt
+  blocked_penalty                                  Int?             @default(0)
+  autogoal                                         Int?             @default(0)
+  red_card                                         Int?             @default(0)
+  match_event_match_event_player_idToplayer        match_event[]    @relation("match_event_player_idToplayer")
+  match_event_match_event_second_player_idToplayer match_event[]    @relation("match_event_second_player_idToplayer")
+  club                                             club?            @relation(fields: [club_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_club_id")
+  competition                                      competition?     @relation(fields: [competition_id], references: [id], onUpdate: SetNull)
+  player_point                                     player_point[]
+  player_result                                    player_result[]
+  team_player                                      team_player[]
+
+  @@index([club_id], map: "club_id")
+  @@index([club_id, competition_id], map: "idx_player_club_competition")
+  @@index([competition_id], map: "idx_player_competition_id")
+  @@index([id], map: "idx_player_id")
+  @@index([deleted_at])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model player_point {
+  id                   Int            @id @default(autoincrement())
+  player_id            Int?
+  club_id              Int?
+  competition_id       Int?
+  match_id             Int?
+  tour_id              Int?
+  point                Int?           @default(0)
+  name                 String?        @db.VarChar(128)
+  goal                 Int?           @default(0) @db.SmallInt
+  goal_asist           Int?           @default(0) @db.SmallInt
+  missed_penalty       Int?           @default(0) @db.SmallInt
+  every_2_missed_goals Int?           @default(0) @db.SmallInt
+  is_red_card          Int?           @default(0) @db.SmallInt
+  yellow_card          Int?           @default(0) @db.SmallInt
+  is_lineup            Int?           @default(0) @db.SmallInt
+  is_shutout           Int?           @default(0) @db.SmallInt
+  is_lineup_more_60    Int?           @default(0) @db.SmallInt
+  player_result_id     Int?
+  created_at           DateTime?      @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime?      @default(now()) @db.Timestamptz(6)
+  deleted_at           DateTime?      @db.Timestamptz(6)
+  created_by           Int?
+  updated_by           Int?
+  deleted_by           Int?
+  season_id            Int?
+  blocked_penalty      Int?           @default(0)
+  autogoal             Int?           @default(0)
+  match_name           String?        @db.VarChar(128)
+  club                 club?          @relation(fields: [club_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_club_id")
+  competition          competition?   @relation(fields: [competition_id], references: [id], onUpdate: SetNull)
+  match                match?         @relation(fields: [match_id], references: [id], onUpdate: SetNull)
+  player               player?        @relation(fields: [player_id], references: [id], onUpdate: SetNull)
+  player_result        player_result? @relation(fields: [player_result_id], references: [id], onUpdate: SetNull)
+  season               season?        @relation(fields: [season_id], references: [id], onUpdate: SetNull)
+  tour                 tour?          @relation(fields: [tour_id], references: [id], onUpdate: SetNull, map: "tour_team_tour_id_fkey")
+
+  @@index([club_id], map: "idx_player_point_club_id")
+  @@index([competition_id], map: "idx_player_point_competition_id")
+  @@index([match_id], map: "idx_player_point_match_id")
+  @@index([player_id, match_id, tour_id], map: "idx_player_point_player_match_tour")
+  @@index([player_result_id], map: "idx_player_point_player_result_id")
+  @@index([point], map: "idx_player_point_point")
+  @@index([season_id], map: "idx_player_point_season_id")
+  @@index([tour_id], map: "idx_player_point_tour_id")
+  @@index([deleted_at])
+  @@index([player_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model player_result {
+  id                   Int              @id @default(autoincrement())
+  player_id            Int?
+  club_id              Int?
+  played_min           Int?             @default(0) @db.SmallInt
+  position             player_position?
+  competition_id       Int?
+  match_id             Int?
+  tour_id              Int?
+  name                 String?          @db.VarChar(128)
+  is_lineup            Boolean?         @default(false)
+  is_lineup_more_60    Boolean?         @default(false)
+  goal                 Int?             @default(0) @db.SmallInt
+  goal_asist           Int?             @default(0) @db.SmallInt
+  missed_penalty       Int?             @default(0) @db.SmallInt
+  every_2_missed_goals Int?             @default(0) @db.SmallInt
+  yellow_card          Int?             @default(0) @db.SmallInt
+  is_shutout           Boolean?         @default(false)
+  is_red_card          Boolean?         @default(false)
+  season_id            Int?
+  created_at           DateTime?        @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime?        @default(now()) @db.Timestamptz(6)
+  deleted_at           DateTime?        @db.Timestamptz(6)
+  created_by           Int?
+  updated_by           Int?
+  deleted_by           Int?
+  blocked_penalty      Int?             @default(0)
+  autogoal             Int?             @default(0)
+  match_name           String?          @db.VarChar(128)
+  player_point         player_point[]
+  club                 club?            @relation(fields: [club_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_club_id")
+  competition          competition?     @relation(fields: [competition_id], references: [id], onUpdate: SetNull)
+  match                match?           @relation(fields: [match_id], references: [id], onUpdate: SetNull)
+  player               player?          @relation(fields: [player_id], references: [id], onUpdate: SetNull)
+  season               season?          @relation(fields: [season_id], references: [id], onUpdate: SetNull)
+  tour                 tour?            @relation(fields: [tour_id], references: [id], onUpdate: SetNull, map: "tour_team_tour_id_fkey")
+
+  @@index([club_id], map: "idx_player_result_club_id")
+  @@index([competition_id], map: "idx_player_result_competition_id")
+  @@index([match_id], map: "idx_player_result_match_id")
+  @@index([player_id], map: "idx_player_result_player_id")
+  @@index([player_id, match_id, tour_id], map: "idx_player_result_player_match_tour")
+  @@index([season_id], map: "idx_player_result_season_id")
+  @@index([tour_id], map: "idx_player_result_tour_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model prize {
+  id             Int          @id @default(autoincrement())
+  name           String?      @db.VarChar(255)
+  image          String?      @db.VarChar(255)
+  competition_id Int?
+  type           prize_type?
+  order          Int?         @db.SmallInt
+  created_at     DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime?    @default(now()) @db.Timestamptz(6)
+  deleted_at     DateTime?    @db.Timestamptz(6)
+  created_by     Int?
+  deleted_by     Int?
+  updated_by     Int?
+  name_ru        String?      @db.VarChar(255)
+  is_active      Boolean?     @default(false)
+  competition    competition? @relation(fields: [competition_id], references: [id], onUpdate: SetNull)
+
+  @@index([competition_id])
+  @@index([deleted_at])
+  @@index([is_active])
+  @@index([order])
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model season {
+  id            Int             @id(map: "_copy_1_copy_1") @default(autoincrement())
+  name          String?         @db.VarChar(128)
+  active        Boolean?
+  created_at    DateTime?       @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime?       @default(now()) @db.Timestamptz(6)
+  deleted_at    DateTime?       @db.Timestamptz(6)
+  created_by    Int?
+  updated_by    Int?
+  deleted_by    Int?
+  match         match[]
+  pay_expense   pay_expense[]
+  player_point  player_point[]
+  player_result player_result[]
+  team          team[]
+  tour          tour[]
+  tour_team     tour_team[]
+
+  @@index([active])
+  @@index([deleted_at])
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model system_config {
+  id         Int          @id @default(autoincrement())
+  key        config_key
+  value      String?
+  type       config_type?
+  is_list    Boolean?
+  name       String?      @db.VarChar(128)
+  created_at DateTime?    @default(now()) @db.Timestamp(6)
+  updated_at DateTime?    @db.Timestamp(6)
+  deleted_at DateTime?    @db.Timestamp(6)
+  created_by Int?
+  updated_by Int?
+  deleted_by Int?
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model system_language {
+  id                                    Int       @id @default(autoincrement())
+  name                                  String?   @unique(map: "system_language_name") @db.VarChar(128)
+  uz                                    String?
+  ru                                    String?
+  en                                    String?
+  created_at                            DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at                            DateTime? @db.Timestamptz(6)
+  deleted_at                            DateTime? @db.Timestamptz(6)
+  created_by                            Int?
+  updated_by                            Int?
+  deleted_by                            Int?
+  is_exclude                            Boolean?
+  user_system_language_created_byTouser user?     @relation("system_language_created_byTouser", fields: [created_by], references: [id], onUpdate: SetNull)
+  user_system_language_deleted_byTouser user?     @relation("system_language_deleted_byTouser", fields: [deleted_by], references: [id], onUpdate: SetNull)
+  user_system_language_updated_byTouser user?     @relation("system_language_updated_byTouser", fields: [updated_by], references: [id], onUpdate: SetNull)
+
+  @@index([created_by], map: "idx_system_language_created_by")
+  @@index([deleted_by], map: "idx_system_language_deleted_by")
+  @@index([updated_by], map: "idx_system_language_updated_by")
+  @@index([name])
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model system_notification {
+  id           Int       @id @default(autoincrement())
+  user_id      Int?
+  desc         String
+  name         String    @db.VarChar(64)
+  created_at   DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime? @db.Timestamptz(6)
+  deleted_at   DateTime? @db.Timestamptz(6)
+  created_by   Int?
+  updated_by   Int?
+  deleted_by   Int?
+  is_broadcast Boolean?  @default(false)
+  published_at DateTime? @default(now()) @db.Timestamptz(6)
+  name_ru      String?   @db.VarChar(64)
+  desc_ru      String?
+  provider     String?   @db.VarChar(255)
+  type         String?   @db.VarChar(255)
+  options      Json?
+  user         user?     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_id")
+
+  @@index([user_id], map: "idx_fk_user_id")
+  @@index([created_at])
+  @@index([deleted_at])
+  @@index([is_broadcast])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model team {
+  id                      Int             @id(map: "_copy_1_copy_1_copy_1_copy_1_copy_3") @default(autoincrement())
+  name                    String?         @unique(map: "name_unique") @db.VarChar(50)
+  user_id                 Int?
+  competition_id          Int?
+  formation               forms?          @default(f4_3_3)
+  DEF                     Int?            @db.SmallInt
+  MID                     Int?            @db.SmallInt
+  STR                     Int?            @db.SmallInt
+  registered_tour_id      Int?
+  season_id               Int?
+  point                   Float?          @default(0) @db.Real
+  order                   Int?            @default(0)
+  balance                 Float?          @default(100) @db.Real
+  is_team_created         Boolean         @default(false)
+  count_of_transfers      Int?            @default(2)
+  transfers_from_one_team Int?            @default(2)
+  created_at              DateTime?       @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime?       @default(now()) @db.Timestamptz(6)
+  deleted_at              DateTime?       @db.Timestamptz(6)
+  created_by              Int?
+  updated_by              Int?
+  deleted_by              Int?
+  last_tour_point         Int?            @default(0)
+  pay_expense             pay_expense[]
+  competition             competition?    @relation(fields: [competition_id], references: [id], onUpdate: SetNull)
+  season                  season?         @relation(fields: [season_id], references: [id], onUpdate: SetNull)
+  user                    user?           @relation(fields: [user_id], references: [id], onUpdate: SetNull)
+  team_player             team_player[]
+  tour_team               tour_team[]
+  user_activity           user_activity[]
+
+  @@index([competition_id], map: "idx_team_competition_id")
+  @@index([id], map: "idx_team_id")
+  @@index([order], map: "idx_team_order")
+  @@index([point], map: "idx_team_point")
+  @@index([season_id], map: "idx_team_season_id")
+  @@index([user_id], map: "idx_team_user_id")
+  @@index([deleted_at])
+  @@index([name])
+  @@index([registered_tour_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model team_player {
+  id             Int              @id @default(autoincrement())
+  player_id      Int?
+  is_captain     Boolean?         @default(false)
+  team_id        Int?
+  position       player_position?
+  club_id        Int?
+  name           String?          @db.VarChar(64)
+  price          Float?           @db.Real
+  tour_id        Int?
+  competition_id Int?
+  user_id        Int?
+  created_at     DateTime?        @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime?        @default(now()) @db.Timestamptz(6)
+  deleted_at     DateTime?        @db.Timestamptz(6)
+  created_by     Int?
+  updated_by     Int?
+  deleted_by     Int?
+  club           club?            @relation(fields: [club_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_club_id")
+  competition    competition?     @relation(fields: [competition_id], references: [id], onUpdate: SetNull)
+  player         player?          @relation(fields: [player_id], references: [id], onUpdate: SetNull)
+  team           team?            @relation(fields: [team_id], references: [id], onUpdate: SetNull)
+  user           user?            @relation(fields: [user_id], references: [id], onUpdate: SetNull)
+  tour           tour?            @relation(fields: [tour_id], references: [id], onUpdate: SetNull, map: "tour_team_tour_id_fkey")
+
+  @@unique([player_id, team_id, tour_id], map: "uq_team_player_player_team_tour")
+  @@index([id, team_id, user_id, tour_id], map: "idx_team_player")
+  @@index([club_id], map: "idx_team_player_club_id")
+  @@index([competition_id], map: "idx_team_player_competition_id")
+  @@index([player_id], map: "idx_team_player_player_id")
+  @@index([team_id], map: "idx_team_player_team_id")
+  @@index([tour_id], map: "idx_team_player_tour_id")
+  @@index([user_id], map: "idx_team_player_user_id")
+  @@index([deleted_at])
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model theme {
+  id                             Int       @id @default(autoincrement())
+  user_id                        Int?
+  light_theme                    Json
+  dark_theme                     Json
+  is_default                     Boolean   @default(false)
+  name                           String
+  name_ru                        String
+  is_global                      Boolean   @default(false)
+  created_at                     DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at                     DateTime? @db.Timestamptz(6)
+  deleted_at                     DateTime? @db.Timestamptz(6)
+  created_by                     Int?
+  updated_by                     Int?
+  deleted_by                     Int?
+  user_theme_user_idTouser       user?     @relation("theme_user_idTouser", fields: [user_id], references: [id], onUpdate: SetNull)
+  user_user_theme_idTotheme      user[]    @relation("user_theme_idTotheme")
+  user_user_user_theme_idTotheme user[]    @relation("user_user_theme_idTotheme")
+
+  @@index([user_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model tour {
+  id               Int             @id(map: "tur_pkey") @default(autoincrement())
+  name             String?         @db.VarChar(64)
+  competition_name String?         @db.VarChar(64)
+  season_name      String?         @db.VarChar
+  competition_id   Int?
+  season_id        Int?
+  datetime_start   DateTime?       @db.Timestamptz(6)
+  status           tour_status?    @default(not_started)
+  order            Int?
+  datetime_end     DateTime?       @db.Timestamptz(0)
+  created_at       DateTime?       @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime?       @default(now()) @db.Timestamptz(6)
+  deleted_at       DateTime?       @db.Timestamptz(6)
+  created_by       Int?
+  updated_by       Int?
+  deleted_by       Int?
+  is_last          Boolean?        @default(false)
+  is_copy          Boolean?        @default(false)
+  name_ru          String?         @db.VarChar(64)
+  match            match[]
+  pay_expense      pay_expense[]
+  player_point     player_point[]
+  player_result    player_result[]
+  team_player      team_player[]
+  competition      competition?    @relation(fields: [competition_id], references: [id], onUpdate: SetNull, map: "fk_competition_id")
+  season           season?         @relation(fields: [season_id], references: [id], onUpdate: SetNull, map: "fk_season_id")
+  tour_team        tour_team[]
+  user_activity    user_activity[]
+
+  @@index([competition_id], map: "idx_tour_competition_id")
+  @@index([id], map: "idx_tour_id")
+  @@index([season_id], map: "idx_tour_season_id")
+  @@index([deleted_at])
+  @@index([order])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model tour_team {
+  id                         Int          @id @default(autoincrement())
+  user_id                    Int?
+  tour_id                    Int?
+  team_id                    Int?
+  point                      Float?       @default(0) @db.Real
+  competition_id             Int?
+  season_id                  Int?
+  current_count_of_transfers Int?         @default(0)
+  created_at                 DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at                 DateTime?    @default(now()) @db.Timestamptz(6)
+  deleted_at                 DateTime?    @db.Timestamptz(6)
+  created_by                 Int?
+  updated_by                 Int?
+  deleted_by                 Int?
+  is_last                    Boolean?     @default(false)
+  formation                  forms?       @default(f4_3_3)
+  competition                competition? @relation(fields: [competition_id], references: [id], onUpdate: SetNull)
+  season                     season?      @relation(fields: [season_id], references: [id], onUpdate: SetNull)
+  team                       team?        @relation(fields: [team_id], references: [id], onUpdate: SetNull)
+  tour                       tour?        @relation(fields: [tour_id], references: [id], onUpdate: SetNull)
+  user                       user?        @relation(fields: [user_id], references: [id], onUpdate: SetNull)
+
+  @@unique([tour_id, team_id], map: "unique_tour_team")
+  @@index([id, team_id, user_id, tour_id], map: "idx_tour_team")
+  @@index([competition_id], map: "idx_tour_team_competition_id")
+  @@index([season_id], map: "idx_tour_team_season_id")
+  @@index([team_id], map: "idx_tour_team_team_id")
+  @@index([tour_id], map: "idx_tour_team_tour_id")
+  @@index([user_id], map: "idx_tour_team_user_id")
+  @@index([deleted_at])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model user {
+  id                                               Int                   @id @default(autoincrement())
+  role                                             roles?                @default(user)
+  name                                             String?               @db.VarChar(64)
+  email                                            String                @unique(map: "user_email_idx") @db.VarChar(255)
+  phone                                            String?               @unique(map: "uk_phone") @db.VarChar(64)
+  last_name                                        String?
+  middle_name                                      String?
+  gender                                           String?               @default("unset")
+  birth_date                                       DateTime?             @db.Date
+  bio                                              String?
+  balance                                          Float?                @default(0)
+  created_at                                       DateTime?             @default(now()) @db.Timestamptz(6)
+  updated_at                                       DateTime?             @db.Timestamptz(6)
+  deleted_at                                       DateTime?             @db.Timestamptz(6)
+  created_by                                       Int?
+  updated_by                                       Int?
+  deleted_by                                       Int?
+  language                                         language?             @default(uz)
+  phone_verified                                   Boolean?              @default(false)
+  visitor                                          String?               @db.VarChar(32)
+  visited_at                                       DateTime?             @db.Timestamptz(6)
+  geo                                              Json?
+  agent                                            Json?
+  image                                            String?
+  emailVerified                                    DateTime?
+  isOAuth                                          Boolean?              @default(false)
+  password                                         String?
+  theme_id                                         Int?
+  user_theme_id                                    Int?
+  notification_topics                              Json?
+  account                                          account[]
+  club_club_created_byTouser                       club[]                @relation("club_created_byTouser")
+  club_club_deleted_byTouser                       club[]                @relation("club_deleted_byTouser")
+  club_club_updated_byTouser                       club[]                @relation("club_updated_byTouser")
+  competition_competition_created_byTouser         competition[]         @relation("competition_created_byTouser")
+  competition_competition_deleted_byTouser         competition[]         @relation("competition_deleted_byTouser")
+  competition_competition_updated_byTouser         competition[]         @relation("competition_updated_byTouser")
+  country_country_created_byTouser                 country[]             @relation("country_created_byTouser")
+  country_country_deleted_byTouser                 country[]             @relation("country_deleted_byTouser")
+  country_country_updated_byTouser                 country[]             @relation("country_updated_byTouser")
+  match_match_created_byTouser                     match[]               @relation("match_created_byTouser")
+  match_match_deleted_byTouser                     match[]               @relation("match_deleted_byTouser")
+  match_match_updated_byTouser                     match[]               @relation("match_updated_byTouser")
+  pay_balance                                      pay_balance[]
+  pay_expense                                      pay_expense[]
+  system_language_system_language_created_byTouser system_language[]     @relation("system_language_created_byTouser")
+  system_language_system_language_deleted_byTouser system_language[]     @relation("system_language_deleted_byTouser")
+  system_language_system_language_updated_byTouser system_language[]     @relation("system_language_updated_byTouser")
+  system_notification                              system_notification[]
+  team                                             team[]
+  team_player                                      team_player[]
+  theme_theme_user_idTouser                        theme[]               @relation("theme_user_idTouser")
+  tour_team                                        tour_team[]
+  theme_user_theme_idTotheme                       theme?                @relation("user_theme_idTotheme", fields: [theme_id], references: [id], onUpdate: SetNull, map: "theme_id_fkey")
+  theme_user_user_theme_idTotheme                  theme?                @relation("user_user_theme_idTotheme", fields: [user_theme_id], references: [id], onUpdate: SetNull, map: "theme_id_fkey2")
+  user_activity_user_activity_created_byTouser     user_activity[]       @relation("user_activity_created_byTouser")
+  user_activity_user_activity_deleted_byTouser     user_activity[]       @relation("user_activity_deleted_byTouser")
+  user_activity_user_activity_updated_byTouser     user_activity[]       @relation("user_activity_updated_byTouser")
+  user_activity_user_activity_user_idTouser        user_activity[]       @relation("user_activity_user_idTouser")
+  user_token                                       user_token[]
+
+  @@index([id], map: "idx_user_id")
+  @@index([name], map: "name_user_copy1")
+  @@index([deleted_at])
+  @@index([phone])
+  @@index([theme_id])
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model user_activity {
+  id                                  Int          @id @default(autoincrement())
+  user_id                             Int?
+  activity                            user_event?
+  team_id                             Int?
+  name_uz                             String?
+  created_at                          DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at                          DateTime?    @default(now()) @db.Timestamptz(6)
+  deleted_at                          DateTime?    @db.Timestamptz(6)
+  created_by                          Int?
+  updated_by                          Int?
+  deleted_by                          Int?
+  name_ru                             String?
+  name_en                             String?
+  tour_id                             Int?
+  competition_id                      Int?
+  user_user_activity_created_byTouser user?        @relation("user_activity_created_byTouser", fields: [created_by], references: [id], onUpdate: SetNull, map: "card_created_by_fkey")
+  user_user_activity_deleted_byTouser user?        @relation("user_activity_deleted_byTouser", fields: [deleted_by], references: [id], onUpdate: SetNull, map: "card_deleted_by_fkey")
+  user_user_activity_updated_byTouser user?        @relation("user_activity_updated_byTouser", fields: [updated_by], references: [id], onUpdate: SetNull, map: "card_updated_by_fkey")
+  competition                         competition? @relation(fields: [competition_id], references: [id], onUpdate: SetNull, map: "fk_competition_id")
+  tour                                tour?        @relation(fields: [tour_id], references: [id], onUpdate: SetNull, map: "tour_team_tour_id_fkey")
+  team                                team?        @relation(fields: [team_id], references: [id], onUpdate: SetNull)
+  user_user_activity_user_idTouser    user?        @relation("user_activity_user_idTouser", fields: [user_id], references: [id], onUpdate: SetNull)
+
+  @@index([competition_id], map: "idx_user_activity_competition_id")
+  @@index([created_by], map: "idx_user_activity_created_by")
+  @@index([deleted_by], map: "idx_user_activity_deleted_by")
+  @@index([team_id], map: "idx_user_activity_team_id")
+  @@index([tour_id], map: "idx_user_activity_tour_id")
+  @@index([updated_by], map: "idx_user_activity_updated_by")
+  @@index([user_id], map: "idx_user_activity_user_id")
+  @@index([created_at])
+  @@index([deleted_at])
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model user_token {
+  id         BigInt                  @id @default(autoincrement())
+  user_id    Int
+  token      String                  @unique(map: "idx_user_token_token")
+  expires_at DateTime                @db.Timestamptz(6)
+  topics     Json?
+  created_at DateTime?               @default(now()) @db.Timestamptz(6)
+  device     String?                 @db.VarChar(32)
+  type       verification_code_type? @default(push_notification)
+  updated_at DateTime?               @default(now()) @db.Timestamptz(6)
+  created_by Int?
+  updated_by Int?
+  status     Json?
+  user       user                    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "token_user_id_fkey")
+
+  @@index([type], map: "idx_user_token_type")
+  @@index([user_id], map: "idx_user_token_user_id")
+}
+
+enum System {
+  Payme
+  Click
+  Uzum
+}
+
+enum TransactionStatus {
+  PENDING
+  CREATED
+  PAID
+  CANCELED
+}
+
+enum banner_service_type {
+  custom
+  yandex
+  google
+}
+
+enum banner_type {
+  modal_banner
+  mini_banner
+  big_banner
+  side_banner_right
+  side_banner_left
+  mobile_modal_banner
+}
+
+enum config_key {
+  config_image
+  config_images
+  config_file
+  config_files
+  config_enum
+  config_date
+  config_foreign_type
+  config_bool
+  config_string
+  config_int
+  pickPlayer_limit
+  craeteTeam_limit
+  user_balance
+  latest_player
+  sms_confirm_uz
+  sms_confirm_ru
+  useSmsConfirmation
+  isSmsTesting
+  smsTestingText
+  eskiz_token
+  MAILERSEND_API_TOKEN
+  cabinet_payme
+  cabinet_click
+  cabinet_uzum
+  checkout_payme
+  checkout_click
+  checkout_uzum
+  link_telegram
+  link_instagram
+  link_email
+  can_send_sms
+  max_transfers
+  max_balance
+  max_same_team_players
+  test_marquee
+  transfer_show_modals
+  allow_payment
+  get_sms_login
+  get_sms_password
+  pickPlayer_limit22
+  sms_provder
+  simcard_uz_key
+  player_count
+  brevo_token
+  brevo_email
+  app_version
+  provider_google
+  provider_facebook
+  provider_yandex
+  secret_jwt
+  seo_title
+  seo_description
+  show_points
+  ads_modal_refresh_interval
+}
+
+enum config_type {
+  TextField
+  Dropdown
+  Radio
+  Checkbox
+}
+
+enum customer_type {
+  good
+  core
+  bad
+}
+
+enum forms {
+  f3_5_2
+  f3_4_3
+  f4_3_3
+  f5_3_2
+  f5_4_1
+  f4_4_2
+}
+
+enum gender {
+  male
+  female
+}
+
+enum language {
+  uz
+  ru
+  en
+}
+
+enum match_event_type {
+  goal
+  red_card
+  yellow_card
+  transfer
+  missed_penalty
+  hit_penalty
+  first_time_start
+  first_time_end
+  second_time_start
+  second_time_end
+  match_end
+  autogoal
+  blocked_penalty
+}
+
+enum match_status {
+  postphoned
+  finished
+  not_started
+  in_process
+}
+
+enum notification_type {
+  sms
+  telegram
+  email
+}
+
+enum pay_method {
+  cash
+  terminal
+  paysys
+  bank
+}
+
+enum pay_package_type {
+  transfer_count
+  team_balance
+  single_club_count
+}
+
+enum pay_system {
+  click
+  payme
+  balance
+  uzum
+}
+
+enum pay_system_ext {
+  click
+  payme
+  uzum
+}
+
+enum player_position {
+  STR
+  MID
+  DEF
+  GOA
+  None
+}
+
+enum point_action {
+  is_lineup
+  is_lineup_more_60
+  goal
+  goal_asist
+  missed_penalty
+  every_2_missed_goals
+  red_card
+  yellow_card
+  is_shutout
+  autogoal
+  blocked_penalty
+}
+
+enum position {
+  GOA
+  DEF
+  MID
+  STR
+}
+
+enum prize_type {
+  gold
+  silver
+  bronze
+}
+
+enum roles {
+  ALL
+  admin
+  manager
+  user
+  guest
+  test
+}
+
+enum status_player {
+  injured
+  available
+  booked
+  Questionable
+}
+
+enum t_tables {
+  company
+  customer
+  customer_category
+  expense
+  expense_category
+  product
+  product_category
+  purchase
+  purchase_product
+  rental
+  rental_payment
+  rental_product
+  rental_product_return
+  rental_product_selling
+  selling
+  selling_payment
+  selling_product
+  system_config
+  system_language
+  system_notification
+  system_table
+  user
+  warehouse
+  warehouse_product
+  ALL
+}
+
+enum theme_type {
+  global
+  preset
+  custom
+}
+
+enum tour_status {
+  completed
+  not_started
+  not_started_transfer
+  in_process
+}
+
+enum user_event {
+  change_capitan
+  buy_package_transfer
+  buy_package_balance
+  buy_package_one_team
+  player_buy
+  player_sell
+}
+
+enum user_role {
+  user
+  admin
+  test
+  guest
+  super_admin @map("super-admin")
+}
+
+enum verification_code_type {
+  push_notification
+  sms
+  email
+}
