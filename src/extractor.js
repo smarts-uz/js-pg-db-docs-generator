@@ -174,21 +174,44 @@ async function getViews(pool, schemas) {
 async function getFunctions(pool, schemas) {
   const { rows } = await pool.query(`
     SELECT
-      n.nspname                        AS schema,
-      p.proname                        AS name,
-      pg_get_function_arguments(p.oid) AS arguments,
-      pg_get_function_result(p.oid)    AS return_type,
-      l.lanname                        AS language,
-      p.prosecdef                      AS security_definer,
+      n.nspname                         AS schema,
+      p.proname                         AS name,
+      pg_get_function_arguments(p.oid)  AS arguments,
+      pg_get_function_result(p.oid)     AS return_type,
+      l.lanname                         AS language,
+      p.prosecdef                       AS security_definer,
       obj_description(p.oid, 'pg_proc') AS comment,
-      p.prosrc                         AS body
+      p.prosrc                          AS body
     FROM pg_proc p
     JOIN pg_namespace n ON n.oid = p.pronamespace
     JOIN pg_language l  ON l.oid = p.prolang
     WHERE n.nspname = ANY($1)
-      AND p.prokind IN ('f', 'p')
+      AND p.prokind IN ('f','p')
+
+      -- system schema
+      AND n.nspname NOT IN ('pg_catalog','information_schema')
+
+      -- internal helper functions
+      AND p.proname NOT LIKE 'pg_%'
+      AND p.proname NOT LIKE 'gin_%'
+      AND p.proname NOT LIKE 'gen_%'
+      AND p.proname NOT LIKE 'gist_%'
+      AND p.proname NOT LIKE 'gtrgm_%'
+      AND p.proname NOT LIKE 'ghstore_%'
+      AND p.proname NOT LIKE 'hstore%'
+      AND p.proname NOT LIKE 'uuid%'
+
+      -- extension functions
+      AND NOT EXISTS (
+        SELECT 1
+        FROM pg_depend d
+        JOIN pg_extension e ON e.oid = d.refobjid
+        WHERE d.objid = p.oid
+      )
+
     ORDER BY n.nspname, p.proname
   `, [schemas]);
+
   return rows;
 }
 
