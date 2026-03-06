@@ -361,7 +361,6 @@ export class HtmlRenderer {
   <!-- Full function body -->
   ${f.body ? `
   <div class="fn-body-wrap">
-    <div class="fn-body-title">Function Body</div>
     <div class="code-block"><pre>${e(f.body.trim())}</pre></div>
   </div>` : ''}
 </div>`;
@@ -380,7 +379,6 @@ export class HtmlRenderer {
 
     return `
   <div class="sub-section jsdoc-section">
-    <div class="sub-title">Parameters &amp; Return</div>
     <table class="jsdoc-table">
       <thead>
         <tr>
