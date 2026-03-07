@@ -336,7 +336,7 @@ export class HtmlRenderer {
   <div class="table-header">
     <div class="table-name-row">
       <h3 class="table-name">
-        <span class="badge-fn">${e(f.kind || 'FN')}</span> ${e(f.name)}
+        <span class="badge-fn">${e(f.kind=='f'?'FUNCTION':'PROCEDURE' || 'FN')}</span> ${e(f.name)}
       </h3>
     </div>
     <div class="table-meta">

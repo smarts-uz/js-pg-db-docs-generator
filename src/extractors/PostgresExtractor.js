@@ -181,7 +181,8 @@ export class PostgresExtractor {
       l.lanname                         AS language,
       p.prosecdef                       AS security_definer,
       obj_description(p.oid, 'pg_proc') AS comment,
-      pg_get_functiondef(p.oid)                          AS body
+      pg_get_functiondef(p.oid)                          AS body,
+      p.prokind AS kind
     FROM pg_proc p
     JOIN pg_namespace n ON n.oid = p.pronamespace
     JOIN pg_language l  ON l.oid = p.prolang
