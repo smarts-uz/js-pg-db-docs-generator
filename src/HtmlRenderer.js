@@ -345,11 +345,6 @@ export class HtmlRenderer {
     </div>
   </div>
 
-  <!-- Signature -->
-  <div class="fn-sig">
-    <code>${e(f.name)}(${e(f.arguments || '')})</code>
-    <span class="fn-returns">→ ${e(f.return_type || 'void')}</span>
-  </div>
 
   <!-- Description from @desc -->
   ${(jsdoc.desc || f.comment) ? `
